@@ -54,6 +54,10 @@ public class TemporaryAssignment extends AbstractRoleAssignment {
         return "TEMPORARY";
     }
 
+    public String getExpiresAt() {
+        return expiresAt;
+    }
+
     public void extend(String newExpirationDate) {
         try {
             LocalDate.parse(newExpirationDate, DATE_FORMATTER);
