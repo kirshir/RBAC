@@ -881,5 +881,38 @@ public class CommandRegistry {
                 String filename = scanner.nextLine().trim();
                 sys.getAuditLog().saveToFile(filename);
             });
+
+        parser.registerCommand("report-users", "Отчёт по пользователям с их ролями",
+            (scanner, sys) -> {
+                String report = sys.getReportGenerator().generateUserReport();
+                System.out.println(report);
+
+                System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                if ("да".equalsIgnoreCase(scanner.nextLine().trim())) {
+                    sys.getReportGenerator().exportToFile(report, "users_report.txt");
+                }
+            });
+
+        parser.registerCommand("report-roles", "Отчёт по ролям с количеством пользователей",
+            (scanner, sys) -> {
+                String report = sys.getReportGenerator().generateRoleReport();
+                System.out.println(report);
+
+                System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                if ("да".equalsIgnoreCase(scanner.nextLine().trim())) {
+                    sys.getReportGenerator().exportToFile(report, "roles_report.txt");
+                }
+            });
+
+        parser.registerCommand("report-matrix", "Матрица прав (пользователи × ресурсы)",
+            (scanner, sys) -> {
+                String report = sys.getReportGenerator().generatePermissionMatrix();
+                System.out.println(report);
+
+                System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                if ("да".equalsIgnoreCase(scanner.nextLine().trim())) {
+                    sys.getReportGenerator().exportToFile(report, "permission_matrix.txt");
+                }
+            });
     }
 }

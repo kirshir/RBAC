@@ -5,6 +5,7 @@ public class RBACSystem {
     private final RoleManager roleManager = new RoleManager();
     private final AssignmentManager assignmentManager = new AssignmentManager();
     private final AuditLog auditLog = new AuditLog();
+    private final ReportGenerator reportGenerator = new ReportGenerator(this);
     private String currentUser = "system";
  
     public UserManager getUserManager() {
@@ -29,6 +30,10 @@ public class RBACSystem {
 
     public AuditLog getAuditLog() {
         return auditLog;
+    }
+
+    public ReportGenerator getReportGenerator() {
+        return reportGenerator;
     }
 
     public void initialize() {
