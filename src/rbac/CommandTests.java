@@ -40,8 +40,6 @@ public class CommandTests {
     }
 
     private static void testUserCommands() {
-        System.out.println("\n--- ТЕСТИРОВАНИЕ КОМАНД ПОЛЬЗОВАТЕЛЕЙ ---");
-
         test("user-create", () -> {
             int countBefore = system.getUserManager().count();
             String input = "testuser\nTest User\ntest@test.com\n";
@@ -118,8 +116,6 @@ public class CommandTests {
 
     
     private static void testRoleCommands() {
-        System.out.println("\n--- ТЕСТИРОВАНИЕ КОМАНД РОЛЕЙ ---");
-
         test("role-list", () -> {
             int count = system.getRoleManager().count();
             simulateCommand("role-list");
@@ -221,8 +217,6 @@ public class CommandTests {
 
 
     private static void testAssignmentCommands() {
-        System.out.println("\n--- ТЕСТИРОВАНИЕ КОМАНД НАЗНАЧЕНИЙ ---");
-
         User testUser = User.validate("testassign", "Test Assign", "testassign@test.com");
         system.getUserManager().add(testUser);
 
@@ -369,8 +363,6 @@ public class CommandTests {
 
 
     private static void testPermissionCommands() {
-        System.out.println("\n--- ТЕСТИРОВАНИЕ КОМАНД ПРАВ ---");
-
         test("permissions-user", () -> {
             String input = "admin\n"; 
             Scanner sc = new Scanner(input);
