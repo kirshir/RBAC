@@ -43,22 +43,27 @@ public class AuditLog {
     }
 
     public void printLog() {
-        System.out.println("\nАудит-лог (все события):");
+        System.out.println(FormatUtils.formatHeader("Аудит-лог (все события)"));
+
         if (entries.isEmpty()) {
-            System.out.println("  Лог пуст.");
+            System.out.println("Лог пуст.");
             return;
         }
 
-        System.out.println("+────────────────────┬────────────────────┬────────────────────┬────────────────────┬───────────────────────────────────────+");
-        System.out.println("| Время              | Действие           | Исполнитель        | Цель               | Подробности                           |");
-        System.out.println("+────────────────────┬────────────────────┬────────────────────┬────────────────────┬───────────────────────────────────────+");
+        String[] headers = {"Время", "Действие", "Исполнитель", "Цель", "Подробности"};
+        List<String[]> rows = new ArrayList<>();
 
         for (AuditEntry e : entries) {
-            System.out.printf("| %-18s | %-18s | %-18s | %-18s | %-37s |\n",
-                    e.timestamp(), e.action(), e.performer(), e.target(), truncate(e.details(), 35));
+            rows.add(new String[]{
+                    e.timestamp(),
+                    e.action(),
+                    e.performer(),
+                    e.target(),
+                    truncate(e.details(), 50) 
+            });
         }
 
-        System.out.println("+────────────────────┴────────────────────┴────────────────────┴────────────────────┴───────────────────────────────────────+");
+System.out.println(FormatUtils.formatTable(headers, rows));
     }
 
     public void saveToFile(String filename) {

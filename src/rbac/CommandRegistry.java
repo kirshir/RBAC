@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CommandRegistry {
     public static void registerAllCommands(CommandParser parser, RBACSystem system) {
@@ -51,15 +52,12 @@ public class CommandRegistry {
                     return;
                 }
 
-                System.out.println("\n+────────────────────+──────────────────────+─────────────────────────────+");
-                System.out.println("| Username           | Full Name            | Email                       |");
-                System.out.println("+────────────────────+──────────────────────+─────────────────────────────+");
+                String[] headers = {"Username", "Полное имя", "Email"};
+                List<String[]> rows = users.stream()
+                        .map(u -> new String[]{u.username(), u.fullName(), u.email()})
+                        .collect(Collectors.toList());
 
-                for (User u : users) {
-                    System.out.printf("| %-18s | %-20s | %-27s |\n", u.username(), u.fullName(), u.email());
-                }
-
-                System.out.println("+────────────────────+──────────────────────+─────────────────────────────+");
+                System.out.println(FormatUtils.formatTable(headers, rows));
             });
         
         parser.registerCommand("user-create", "Создать нового пользователя",
@@ -508,7 +506,7 @@ public class CommandRegistry {
                 }
                 System.out.println("Все назначения:");
                 assigns.forEach(a -> {
-                    System.out.println("  " + a.user().username() + " → " + a.role().getName() +
+                    System.out.println("  " + a.user().username() + " -> " + a.role().getName() +
                             " (" + a.assignmentType() + ", " + (a.isActive() ? "активно" : "неактивно") +
                             ", " + a.metadata().assignedAt() + ")");
                 });

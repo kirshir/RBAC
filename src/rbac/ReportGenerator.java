@@ -3,6 +3,7 @@ package rbac;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,8 +19,7 @@ public class ReportGenerator {
 
     public String generateUserReport() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Отчёт по пользователям\n");
-        sb.append("──────────────────────\n\n");
+        sb.append(FormatUtils.formatHeader("Отчёт по пользователям"));
 
         List<User> users = system.getUserManager().findAll();
         if (users.isEmpty()) {
@@ -27,8 +27,8 @@ public class ReportGenerator {
             return sb.toString();
         }
 
-        sb.append(String.format("%-20s %-25s %-30s %s%n", "Username", "Full Name", "Email", "Активные роли"));
-        sb.append("───────────────────────────────────────────────────────────────────────────────────────────────\n");
+        String[] headers = {"Username", "Полное имя", "Email", "Активные роли"};
+        List<String[]> rows = new ArrayList<>();
 
         for (User u : users) {
             List<RoleAssignment> assigns = system.getAssignmentManager().findByUser(u);
@@ -40,20 +40,21 @@ public class ReportGenerator {
                 rolesStr = "нет";
             }
 
-            sb.append(String.format("%-20s %-25s %-30s %s%n", 
-                    u.username(), 
-                    u.fullName(), 
-                    u.email(), 
-                    rolesStr));
+            rows.add(new String[]{
+                    u.username(),
+                    u.fullName(),
+                    u.email(),
+                    rolesStr
+            });
         }
 
+        sb.append(FormatUtils.formatTable(headers, rows));
         return sb.toString();
     }
 
     public String generateRoleReport() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Отчёт по ролям\n");
-        sb.append("───────────────────\n\n");
+        sb.append(FormatUtils.formatHeader("Отчёт по ролям"));
 
         List<Role> roles = system.getRoleManager().findAll();
         if (roles.isEmpty()) {
@@ -61,28 +62,29 @@ public class ReportGenerator {
             return sb.toString();
         }
 
-        sb.append(String.format("%-20s %-30s %-12s %s%n", "Роль", "Описание", "Прав", "Пользователей"));
-        sb.append("───────────────────────────────────────────────────────────────────────────────\n");
+        String[] headers = {"Роль", "Описание", "Кол-во прав", "Кол-во пользователей"};
+        List<String[]> rows = new ArrayList<>();
 
         for (Role r : roles) {
             long userCount = system.getAssignmentManager().findByRole(r).stream()
                     .filter(RoleAssignment::isActive)
                     .count();
 
-            sb.append(String.format("%-20s %-30s %-12d %d%n", 
-                    r.getName(), 
-                    r.getDescription(), 
-                    r.getPermissions().size(), 
-                    userCount));
+            rows.add(new String[]{
+                    r.getName(),
+                    r.getDescription(),
+                    String.valueOf(r.getPermissions().size()),
+                    String.valueOf(userCount)
+            });
         }
 
+        sb.append(FormatUtils.formatTable(headers, rows));
         return sb.toString();
     }
 
     public String generatePermissionMatrix() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Матрица прав (пользователи × ресурсы)\n");
-        sb.append("─────────────────────────────────────\n\n");
+        sb.append(FormatUtils.formatHeader("Матрица прав (пользователи × ресурсы)"));
 
         List<User> users = system.getUserManager().findAll();
         if (users.isEmpty()) {
@@ -100,15 +102,16 @@ public class ReportGenerator {
             return sb.toString();
         }
 
-        sb.append(String.format("%-20s", "Username"));
-        for (String res : resources) {
-            sb.append(String.format("%-12s", res));
-        }
-        sb.append("\n");
-        sb.append("-".repeat(20 + resources.size() * 12)).append("\n");
+        List<String> headerList = new ArrayList<>();
+        headerList.add("Username");
+        headerList.addAll(resources);
+
+        String[] headers = headerList.toArray(new String[0]);
+        List<String[]> rows = new ArrayList<>();
 
         for (User u : users) {
-            sb.append(String.format("%-20s", u.username()));
+            List<String> row = new ArrayList<>();
+            row.add(u.username());
 
             for (String res : resources) {
                 boolean hasRead = system.getAssignmentManager().userHasPermission(u, "READ", res);
@@ -116,11 +119,13 @@ public class ReportGenerator {
                 String cell = "";
                 if (hasRead) cell += "R";
                 if (hasWrite) cell += "W";
-                sb.append(String.format("%-12s", cell.isEmpty() ? "-" : cell));
+                row.add(cell.isEmpty() ? "-" : cell);
             }
-            sb.append("\n");
+
+            rows.add(row.toArray(new String[0]));
         }
 
+        sb.append(FormatUtils.formatTable(headers, rows));
         return sb.toString();
     }
 
