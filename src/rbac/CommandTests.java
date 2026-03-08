@@ -59,7 +59,9 @@ public class CommandTests {
         });
 
         test("user-list", () -> {
-            simulateCommand("user-list");
+            String input = " ";
+            Scanner sc = new Scanner(input);
+            parser.executeCommand("user-list", sc, system);
             System.out.println("OK: user-list выполнился");
             testsPassed++;
         });
@@ -407,6 +409,7 @@ public class CommandTests {
         System.out.print("Тест " + commandName + " ... ");
         try {
             testLogic.run();
+            System.out.println("\n");
         } catch (Exception e) {
             System.out.println("ОШИБКА: " + e.getMessage());
             testsFailed++;

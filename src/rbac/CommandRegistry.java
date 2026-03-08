@@ -3,22 +3,66 @@ package rbac;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 public class CommandRegistry {
     public static void registerAllCommands(CommandParser parser, RBACSystem system) {
-        parser.registerCommand("user-list", "Вывести список всех пользователей (с фильтрами и сортировкой)", 
+        parser.registerCommand("user-list", "Вывести список всех пользователей (с фильтрами и сортировкой)",
             (scanner, sys) -> {
-                System.out.println("Список пользователей:");
-                List<User> users = sys.getUserManager().findAll();
+                System.out.println("Список пользователей (введите 'f' для фильтров или Enter для всех): ");
+                String param = scanner.nextLine().trim().toLowerCase();
+
+                UserFilter filter = null;
+                Comparator<User> sorter = null;
+
+                if ("f".equals(param)) {
+                    System.out.println("Выберите фильтр:");
+                    System.out.println("1. По username (содержит)");
+                    System.out.println("2. По email (содержит)");
+                    System.out.println("3. По домену email");
+                    System.out.println("4. По полному имени (содержит)");
+                    String choice = scanner.nextLine().trim();
+                    switch (choice) {
+                        case "1":
+                            System.out.print("Подстрока в username: ");
+                            filter = UserFilters.byUsernameContains(scanner.nextLine().trim());
+                            break;
+                        case "2":
+                            System.out.print("Подстрока в email: ");
+                            filter = UserFilters.byEmail(scanner.nextLine().trim());
+                            break;
+                        case "3":
+                            System.out.print("Домен email: ");
+                            filter = UserFilters.byEmailDomain(scanner.nextLine().trim());
+                            break;
+                        case "4":
+                            System.out.print("Подстрока в полном имени: ");
+                            filter = UserFilters.byFullNameContains(scanner.nextLine().trim());
+                            break;
+                        default:
+                            System.out.println("Неверный выбор. Выводим всех.");
+                    }
+                }
+
+                List<User> users = sys.getUserManager().findAll(filter, sorter);
+
                 if (users.isEmpty()) {
                     System.out.println("Нет пользователей.");
                     return;
                 }
-                System.out.println("Пользователи:");
-                users.forEach(u -> System.out.println("  • " + u.format()));
+
+                System.out.println("+────────────────────+──────────────────────+─────────────────────────────+");
+                System.out.println("| Username           | Full Name            | Email                       |");
+                System.out.println("+────────────────────+──────────────────────+─────────────────────────────+");
+
+                for (User u : users) {
+                    System.out.printf("| %-18s | %-20s | %-27s |\n", u.username(), u.fullName(), u.email());
+                }
+
+                System.out.println("+────────────────────+──────────────────────+─────────────────────────────+");
             });
         
         parser.registerCommand("user-create", "Создать нового пользователя",
@@ -45,6 +89,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Введите username: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> userOpt = sys.getUserManager().findByUsername(username);
                 if (userOpt.isEmpty()) {
@@ -81,6 +129,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Введите username: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> userOpt = sys.getUserManager().findByUsername(username);
                 if (userOpt.isEmpty()) {
@@ -93,6 +145,10 @@ public class CommandRegistry {
 
                 System.out.print("Новый email (или Enter, чтобы оставить): ");
                 String newEmail = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidEmail(newEmail)) {
+                    System.out.println("Неверный формат email");
+                    return;
+                }
 
                 try {
                     sys.getUserManager().update(username, newFullName, newEmail);
@@ -106,6 +162,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Username: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> opt = sys.getUserManager().findByUsername(username);
                 if (opt.isEmpty()) {
@@ -409,6 +469,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Username пользователя: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> userOpt = sys.getUserManager().findByUsername(username);
                 if (userOpt.isEmpty()) {
@@ -464,6 +528,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Username пользователя: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> userOpt = sys.getUserManager().findByUsername(username);
                 if (userOpt.isEmpty()) {
@@ -517,6 +585,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Username: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }
 
                 Optional<User> opt = sys.getUserManager().findByUsername(username);
                 if (opt.isEmpty()) {
@@ -601,6 +673,10 @@ public class CommandRegistry {
 
                 System.out.print("Новая дата истечения (YYYY-MM-DD): ");
                 String newDate = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidDate(newDate)) {
+                    System.out.println("Неверный формат даты");
+                    return;
+                }
 
                 try {
                     sys.getAssignmentManager().extendTemporaryAssignment(id, newDate);
@@ -635,6 +711,10 @@ public class CommandRegistry {
                     case "1":
                         System.out.print("Username пользователя: ");
                         String username = scanner.nextLine().trim();
+                        if (!ValidationUtils.isValidUsername(username)) {
+                            System.out.println("Неверный формат username");
+                            return;
+                        }   
                         Optional<User> uOpt = sys.getUserManager().findByUsername(username);
                         if (uOpt.isEmpty()) {
                             System.out.println("Пользователь не найден.");
@@ -671,12 +751,20 @@ public class CommandRegistry {
                     case "6":
                         System.out.print("Назначенные после даты (YYYY-MM-DD): ");
                         String afterDate = scanner.nextLine().trim();
+                        if (!ValidationUtils.isValidDate(afterDate)) {
+                            System.out.println("Неверный формат даты");
+                            return;
+                        }
                         filter = AssignmentFilters.assignedAfter(afterDate);
                         break;
 
                     case "7":
                         System.out.print("Истекающие до даты (YYYY-MM-DD): ");
                         String beforeDate = scanner.nextLine().trim();
+                        if (!ValidationUtils.isValidDate(beforeDate)) {
+                            System.out.println("Неверный формат даты");
+                            return;
+                        }
                         filter = AssignmentFilters.expiringBefore(beforeDate);
                         break;
 
@@ -708,6 +796,10 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 System.out.print("Username: ");
                 String username = scanner.nextLine().trim();
+                if (!ValidationUtils.isValidUsername(username)) {
+                    System.out.println("Неверный формат username");
+                    return;
+                }   
 
                 Optional<User> opt = sys.getUserManager().findByUsername(username);
                 if (opt.isEmpty()) {
