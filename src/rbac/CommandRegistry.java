@@ -80,6 +80,7 @@ public class CommandRegistry {
                     User newUser = User.validate(username, fullName, email);
                     sys.getUserManager().add(newUser);
                     System.out.println("Пользователь успешно создан: " + newUser.format());
+                    sys.getAuditLog().log("USER_CREATE", sys.getCurrentUser(), username, "Создан новый пользователь");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Ошибка: " + e.getMessage());
                 }
@@ -153,6 +154,7 @@ public class CommandRegistry {
                 try {
                     sys.getUserManager().update(username, newFullName, newEmail);
                     System.out.println("Данные пользователя обновлены.");
+                    sys.getAuditLog().log("USER_UPDATE", sys.getCurrentUser(), username, "Пользователь обновлен");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Ошибка: " + e.getMessage());
                 }
@@ -184,6 +186,7 @@ public class CommandRegistry {
 
                 sys.getUserManager().remove(opt.get());
                 System.out.println("Пользователь удалён.");
+                sys.getAuditLog().log("USER_DELETE", sys.getCurrentUser(), username, "Пользователь удален");
             });
 
         parser.registerCommand("user-search", "Поиск пользователей по фильтрам",
@@ -253,6 +256,7 @@ public class CommandRegistry {
                 try {
                     sys.getRoleManager().add(role);
                     System.out.println("Роль создана: " + role.getName());
+                    sys.getAuditLog().log("ROLE_CREATE", sys.getCurrentUser(), name, "Создана новая роль");
 
                     while (true) {
                         System.out.print("Добавить право? (да/нет): ");
@@ -326,6 +330,7 @@ public class CommandRegistry {
                     sys.getRoleManager().add(updatedRole);
                     
                     System.out.println("Роль успешно обновлена");
+                    sys.getAuditLog().log("ROLE_UPDATE", sys.getCurrentUser(), newName, "Роль обновлена");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Ошибка при обновлении: " + e.getMessage());
                 }
@@ -355,6 +360,7 @@ public class CommandRegistry {
 
                 sys.getRoleManager().remove(opt.get());
                 System.out.println("Роль удалена.");
+                sys.getAuditLog().log("ROLE_DELETE", sys.getCurrentUser(), name, "Удалена роль");
             });
 
         parser.registerCommand("role-add-permission", "Добавить право к роли",
@@ -519,6 +525,7 @@ public class CommandRegistry {
                 try {
                     sys.getAssignmentManager().add(assignment);
                     System.out.println("Роль назначена.");
+                    sys.getAuditLog().log("ASSIGN_ROLE", sys.getCurrentUser(), user.username() + " -> " + role.getName(), "Назначена роль");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Ошибка: " + e.getMessage());
                 }
@@ -561,6 +568,7 @@ public class CommandRegistry {
                     RoleAssignment toRevoke = assigns.get(num);
                     sys.getAssignmentManager().revokeAssignment(toRevoke.assignmentId());
                     System.out.println("Назначение отозвано.");
+                    sys.getAuditLog().log("REVOKE_ROLE", sys.getCurrentUser(), username + " -> " + toRevoke.role().getName() , "Отозвана роль у пользователя");
                 } catch (Exception e) {
                     System.out.println("Неверный номер.");
                 }
@@ -860,6 +868,18 @@ public class CommandRegistry {
                     System.exit(0);
                 }
                 System.out.println("Выход отменён.");
+            });
+
+        parser.registerCommand("audit-log", "Просмотр лога событий",
+            (scanner, sys) -> {
+                sys.getAuditLog().printLog();
+            });
+
+        parser.registerCommand("save-logs-to-file", "Сохранения логов в файл", 
+            (scanner, sys) -> {
+                System.out.print("Имя файла: ");
+                String filename = scanner.nextLine().trim();
+                sys.getAuditLog().saveToFile(filename);
             });
     }
 }
