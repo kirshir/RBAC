@@ -1,7 +1,5 @@
 package rbac;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +20,7 @@ public class AuditLog {
     ) {}
 
     public void log(String action, String performer, String target, String details) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String timestamp = DateUtils.getCurrentDateTime();
         entries.add(new AuditEntry(timestamp, action, performer, target, details));
     }
 

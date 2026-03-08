@@ -449,8 +449,8 @@ public class CommandRegistry {
                     assignment = new PermanentAssignment(user, role, meta);
                 } else if (type.equals("temporary")) {
                     String expires = ConsoleUtils.promptString(scanner, "Дата истечения (YYYY-MM-DD)", true);
-                    if (!ValidationUtils.isValidDate(expires)) {
-                        System.out.println("Неверный формат даты");
+                    if (!DateUtils.isValidDate(expires)) {
+                        System.out.println("Неверный формат даты (ожидается YYYY-MM-DD)");
                         return;
                     }
                     assignment = new TemporaryAssignment(user, role, meta, expires, false);    
@@ -601,8 +601,8 @@ public class CommandRegistry {
                 }
 
                 String newDate = ConsoleUtils.promptString(scanner, "Новая дата истечения (YYYY-MM-DD)", true);
-                if (!ValidationUtils.isValidDate(newDate)) {
-                    System.out.println("Неверный формат даты");
+                if (!DateUtils.isValidDate(newDate)) {
+                    System.out.println("Неверный формат даты (ожидается YYYY-MM-DD)");
                     return;
                 }
 
