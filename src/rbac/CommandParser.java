@@ -62,10 +62,7 @@ public class CommandParser {
         commandDescriptions.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> {
-                    System.out.printf("%-20s : %s%n", entry.getKey(), entry.getValue());
+                    System.out.printf("%-22s : %s%n", entry.getKey(), entry.getValue());
                 });
-
-        System.out.println("\nВведите команду или help для справки.");
-        System.out.println("Для выхода введите exit");
     }
 }

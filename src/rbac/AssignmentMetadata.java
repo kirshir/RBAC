@@ -1,21 +1,17 @@
 package rbac;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 public record AssignmentMetadata(
     String assignedBy,
     String assignedAt,
     String reason
 ) {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public static AssignmentMetadata now(String assignedBy, String reason) {
         if (assignedBy == null || assignedBy.isBlank()) {
             throw new IllegalArgumentException("assignedBy не может быть пустым");
         }
 
-        String nowStr = LocalDateTime.now().format(FORMATTER);
+        String nowStr = DateUtils.getCurrentDate();
         return new AssignmentMetadata(
             assignedBy.trim(),
             nowStr, 

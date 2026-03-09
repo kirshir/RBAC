@@ -224,7 +224,7 @@ public class CommandRegistry {
                 }
                 System.out.println("Список ролей:");
                 roles.forEach(r -> {
-                    System.out.println("  " + r.getName() + " (" + r.getPermissions().size() + " прав)");
+                    System.out.println("  " + r.getName() + " (" + r.getPermissions().size() + " прав\\права)");
                 });
             });
         
@@ -413,7 +413,7 @@ public class CommandRegistry {
                 if (result.isEmpty()) {
                     System.out.println("  Ролей не найдено.");
                 } else {
-                    result.forEach(r -> System.out.println("  " + r.getName() + " (" + r.getPermissions().size() + " прав)"));
+                    result.forEach(r -> System.out.println("  " + r.getName() + " (" + r.getPermissions().size() + " прав\\права)"));
                 }
             });
         

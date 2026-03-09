@@ -25,7 +25,7 @@ public final class FormatUtils {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("+");
+        sb.append("\n+");
         for (int width : colWidths) {
             sb.append("-".repeat(width + 2)).append("+");
         }
