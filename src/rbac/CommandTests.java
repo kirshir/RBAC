@@ -14,7 +14,6 @@ public class CommandTests {
         System.out.println("=== ТЕСТИРОВАНИЕ КОМАНД RBAC ===\n");
 
         setup();
-
         testUserCommands();
         testRoleCommands();
         testAssignmentCommands();
