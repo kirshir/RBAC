@@ -2,7 +2,10 @@ package rbac;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -11,6 +14,15 @@ import java.io.IOException;
 public class AuditLog {
 
     private final List<AuditEntry> entries = new CopyOnWriteArrayList<>();
+    private final BlockingQueue<AuditEntry> logQueue = new LinkedBlockingQueue<>();
+    private final Thread logProcessorThread;
+    private final AtomicBoolean running = new AtomicBoolean(true);
+
+    public AuditLog() {
+        logProcessorThread = new Thread(() -> processLogs());
+        logProcessorThread.setDaemon(true);
+        logProcessorThread.start();
+    }
 
     public record AuditEntry(
         String timestamp,     
@@ -22,7 +34,30 @@ public class AuditLog {
 
     public void log(String action, String performer, String target, String details) {
         String timestamp = DateUtils.getCurrentDateTime();
-        entries.add(new AuditEntry(timestamp, action, performer, target, details));
+        AuditEntry entry = new AuditEntry(timestamp, action, performer, target, details);
+        try {
+            logQueue.put(entry);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            entries.add(entry);
+        }
+    }
+
+    private void processLogs() {
+        while (running.get() || !logQueue.isEmpty()) {
+            try {
+                AuditEntry entry = logQueue.take();
+                entries.add(entry);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+
+    public void shutdown() {
+        running.set(false);
+        logProcessorThread.interrupt();
     }
 
     public List<AuditEntry> getAll() {

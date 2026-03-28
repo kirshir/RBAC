@@ -9,6 +9,7 @@ public class RBACSystem {
     private final AssignmentManager assignmentManager = new AssignmentManager();
     private final AuditLog auditLog = new AuditLog();
     private final ReportGenerator reportGenerator = new ReportGenerator(this);
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     private String currentUser = "system";
  
     public UserManager getUserManager() {
@@ -37,6 +38,14 @@ public class RBACSystem {
 
     public ReportGenerator getReportGenerator() {
         return reportGenerator;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    public void shutdown() {
+        executorService.shutdown();
     }
 
     public void initialize() {

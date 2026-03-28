@@ -810,11 +810,32 @@ public class CommandRegistry {
             (scanner, sys) -> {
                 String report = sys.getReportGenerator().generatePermissionMatrix();
                 System.out.println(report);
-
+ 
                 boolean save = ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл?");
                 if (save) {
                     sys.getReportGenerator().exportToFile(report, "permission_matrix.txt");
                 }
+            });
+
+        parser.registerCommand("report-users-async", "Асинхронная генерация отчёта по пользователям",
+            (scanner, sys) -> {
+                System.out.println("Запуск асинхронной генерации отчёта...");
+                sys.getExecutorService().submit(() -> {
+                    String report = sys.getReportGenerator().generateUserReportParallel();
+                    System.out.println("\n=== Асинхронный отчёт по пользователям ===");
+                    System.out.println(report);
+                    System.out.println("=== Конец отчёта ===\n");
+                });
+            });
+
+        parser.registerCommand("save-async", "Асинхронное сохранение данных в файл",
+            (scanner, sys) -> {
+                System.out.println("Запуск асинхронного сохранения...");
+                sys.getExecutorService().submit(() -> {
+                    String report = sys.getReportGenerator().generateUserReport();
+                    sys.getReportGenerator().exportToFile(report, "async_users_report_" + System.currentTimeMillis() + ".txt");
+                    System.out.println("Асинхронное сохранение завершено.");
+                });
             });
     }
 }
