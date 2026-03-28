@@ -52,6 +52,41 @@ public class ReportGenerator {
         return sb.toString();
     }
 
+    public String generateUserReportParallel() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(FormatUtils.formatHeader("Отчёт по пользователям (параллельная обработка)"));
+
+        List<User> users = system.getUserManager().findAll();
+        if (users.isEmpty()) {
+            sb.append("Нет пользователей.\n");
+            return sb.toString();
+        }
+
+        String[] headers = {"Username", "Полное имя", "Email", "Активные роли"};
+        List<String[]> rows = users.parallelStream()
+                .map(u -> {
+                    List<RoleAssignment> assigns = system.getAssignmentManager().findByUser(u);
+                    String rolesStr = assigns.parallelStream()
+                            .filter(RoleAssignment::isActive)
+                            .map(a -> a.role().getName())
+                            .collect(Collectors.joining(", "));
+                    if (rolesStr.isEmpty()) {
+                        rolesStr = "нет";
+                    }
+
+                    return new String[]{
+                            u.username(),
+                            u.fullName(),
+                            u.email(),
+                            rolesStr
+                    };
+                })
+                .collect(Collectors.toList());
+
+        sb.append(FormatUtils.formatTable(headers, rows));
+        return sb.toString();
+    }
+
     public String generateRoleReport() {
         StringBuilder sb = new StringBuilder();
         sb.append(FormatUtils.formatHeader("Отчёт по ролям"));
@@ -124,6 +159,53 @@ public class ReportGenerator {
 
             rows.add(row.toArray(new String[0]));
         }
+
+        sb.append(FormatUtils.formatTable(headers, rows));
+        return sb.toString();
+    }
+
+    public String generatePermissionMatrixParallel() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(FormatUtils.formatHeader("Матрица прав (пользователи × ресурсы, параллельная обработка)"));
+
+        List<User> users = system.getUserManager().findAll();
+        if (users.isEmpty()) {
+            sb.append("Нет пользователей.\n");
+            return sb.toString();
+        }
+
+        Set<String> resources = new HashSet<>();
+        system.getAssignmentManager().getActiveAssignments().forEach(a -> {
+            a.role().getPermissions().forEach(p -> resources.add(p.resource()));
+        });
+
+        if (resources.isEmpty()) {
+            sb.append("Нет прав доступа.\n");
+            return sb.toString();
+        }
+
+        List<String> headerList = new ArrayList<>();
+        headerList.add("Username");
+        headerList.addAll(resources);
+
+        String[] headers = headerList.toArray(new String[0]);
+        List<String[]> rows = users.parallelStream()
+                .map(u -> {
+                    List<String> row = new ArrayList<>();
+                    row.add(u.username());
+
+                    for (String res : resources) {
+                        boolean hasRead = system.getAssignmentManager().userHasPermission(u, "READ", res);
+                        boolean hasWrite = system.getAssignmentManager().userHasPermission(u, "WRITE", res);
+                        String cell = "";
+                        if (hasRead) cell += "R";
+                        if (hasWrite) cell += "W";
+                        row.add(cell.isEmpty() ? "-" : cell);
+                    }
+
+                    return row.toArray(new String[0]);
+                })
+                .collect(Collectors.toList());
 
         sb.append(FormatUtils.formatTable(headers, rows));
         return sb.toString();
