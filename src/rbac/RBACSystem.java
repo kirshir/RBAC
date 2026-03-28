@@ -1,7 +1,10 @@
 package rbac;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class RBACSystem {
     private final UserManager userManager = new UserManager();
@@ -10,6 +13,7 @@ public class RBACSystem {
     private final AuditLog auditLog = new AuditLog();
     private final ReportGenerator reportGenerator = new ReportGenerator(this);
     private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private String currentUser = "system";
  
     public UserManager getUserManager() {
@@ -46,6 +50,38 @@ public class RBACSystem {
 
     public void shutdown() {
         executorService.shutdown();
+        scheduler.shutdown();
+        auditLog.shutdown();
+    }
+
+    public ScheduledExecutorService getScheduler() {
+        return scheduler;
+    }
+
+    public void startPeriodicTasks() {
+        scheduler.scheduleAtFixedRate(this::checkExpiredAssignments, 0, 60, TimeUnit.SECONDS);
+    }
+
+    private void checkExpiredAssignments() {
+        List<RoleAssignment> allAssignments = assignmentManager.findAll();
+        int expiredCount = 0;
+        
+        for (RoleAssignment assignment : allAssignments) {
+            if (assignment instanceof TemporaryAssignment tempAssignment &&
+                !tempAssignment.isActive() &&
+                assignmentManager.findById(assignment.assignmentId()).isPresent()) {
+                assignmentManager.remove(assignment);
+                expiredCount++;
+                
+                auditLog.log("EXPIRED_ASSIGNMENT_REMOVED", "system",
+                    assignment.user().username() + " -> " + assignment.role().getName(),
+                    "Временное назначение истекло и удалено");
+            }
+        }
+        
+        auditLog.log("STATISTICS_REPORT", "system", "periodic-task",
+            String.format("Проверка истёкших назначений: %d истёкших назначений обработано, всего активных: %d",
+                expiredCount, assignmentManager.getActiveAssignments().size()));
     }
 
     public void initialize() {
