@@ -3,17 +3,17 @@ package rbac;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class RoleManager implements Repository<Role> {
     
-    private final Map<String, Role> rolesById = new HashMap<>();
+    private final Map<String, Role> rolesById = new ConcurrentHashMap<>();
 
-    private final Map<String, Role> rolesByName = new HashMap<>();
+    private final Map<String, Role> rolesByName = new ConcurrentHashMap<>();
 
     @Override
     public void add(Role role) {

@@ -2,6 +2,7 @@ package rbac;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -9,7 +10,7 @@ import java.io.IOException;
 
 public class AuditLog {
 
-    private final List<AuditEntry> entries = new ArrayList<>();
+    private final List<AuditEntry> entries = new CopyOnWriteArrayList<>();
 
     public record AuditEntry(
         String timestamp,     
